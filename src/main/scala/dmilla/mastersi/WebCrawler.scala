@@ -5,20 +5,26 @@ package dmilla.mastersi
   */
 
 import akka.actor.Actor
+
 import io.{BufferedSource, Source}
 import java.net.URL
 import java.util
+
+import dmilla.mastersi.CommProtocol.CrawlRequest
+
 import scala.util.matching.Regex
 
 
-class WebCrawler extends Actor{
+class WebCrawler extends Actor {
 
-  def crawlUrl(website: String, max_depth: Int) = {
+  def crawlUrl(url: String, max_depth: Int) = {
     var current_depth = 0
     var requestProperties: Map[String, String] = Map(
       "User-Agent" -> "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)",
-      "Referer" -> "http://www.download-midi.com/midi_4503_pendulum-notation.html"
+      "Referer" -> url
     )
+    val links = getLinks(getHttp(url, requestProperties), """http://[A-Za-z0-9-_:%&?/.=]*""".r)
+    links.foreach(println)
   }
 
   def getHttp(url: String, requestProperties: Map[String, String]) = {
@@ -47,6 +53,7 @@ class WebCrawler extends Actor{
   }
 
   def receive = {
+    case  CrawlRequest(url, depth) => crawlUrl(url, depth)
     case "test" ⇒ println("received test")
     case _      ⇒ println("received unknown message")
   }
