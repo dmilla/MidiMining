@@ -53,6 +53,11 @@ class UI extends MainFrame {
       e.xLayoutAlignment = 0.0
     border = Swing.EmptyBorder(10, 10, 10, 10)
   }
+
+  def addOutput(out: String): Unit = {
+    outputField.append(out + "\n")
+  }
+
 }
 
 

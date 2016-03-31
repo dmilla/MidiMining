@@ -27,17 +27,16 @@ class WebCrawler extends Actor {
 
 
   def crawlUrl(url: String, follow_if: String, max_depth: Int) = {
-    println("Let's crawl " + url + " and find some Midi files!")
+    notify("Let's crawl " + url + " and find some Midi files!")
     val linkRegex = ("""http://[A-Za-z0-9-_:%&?/.=]*""" + follow_if + """[A-Za-z0-9-_:%&?/.=]*""").r
     val (content_type, input_stream) = getHttp(url, "")
     val links = getLinks(Source.fromInputStream(input_stream).getLines.mkString, linkRegex)
     var links_with_referer = links.map((url, _)).toArray
     var current_depth = 1
-    println("Found " + links.size + " links in starting page")
+    notify("Found " + links.size + " links in starting page")
     while (current_depth < max_depth) {
       val new_links = followLinks(links_with_referer, linkRegex)
-      //new_links.foreach(println)
-      println("level " + current_depth + " finished, found " + new_links.size + " new links!")
+      notify("level " + current_depth + " crawling finished, found " + new_links.size + " new links!")
       current_depth += 1
       links_with_referer = new_links
     }
@@ -78,15 +77,16 @@ class WebCrawler extends Actor {
     val start = System.nanoTime
     val r = f
     val end = System.nanoTime
-    val time = (end - start)/1e6
-    println("time = " + time +"ms")
+    val time = (end - start)/(1e6*1000)
+    notify("Crawling finalizado, tiempo total: " + time +"s")
     r
   }
-// TODO add time info to crawlURL when requested
+
+  def notify(msg: String) = MidiMiningGui.addOutput(msg)
+
   def receive = {
-    case  CrawlRequest(url, follow_if, depth) => crawlUrl(url, follow_if, depth)
-    case "test" ⇒ println("received test")
-    case _      ⇒ println("received unknown message")
+    case  CrawlRequest(url, follow_if, depth) => time(crawlUrl(url, follow_if, depth))
+    case _      ⇒ notify("WebCrawler received unknown message")
   }
 
 }
