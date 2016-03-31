@@ -17,9 +17,11 @@ class UI extends MainFrame {
   val nameSize = new Dimension(600, 30)
   val depthSize = new Dimension(60, 30)
   val nameField = new TextField { text = "http://mididatabase.com/"}
+  val followField = new TextField { text = "midi"}
   val depthField = new TextField { text = "3"}
   val outputField = new TextArea { rows = 8; lineWrap = true; wordWrap = true; editable = false }
   nameField.peer.setMaximumSize(nameSize)
+  followField.peer.setMaximumSize(nameSize)
   depthField.peer.setMaximumSize(depthSize)
   outputField.editable = false
   contents = new BoxPanel(Orientation.Vertical) {
@@ -30,13 +32,19 @@ class UI extends MainFrame {
     }
     contents += Swing.VStrut(10)
     contents += new BoxPanel(Orientation.Horizontal) {
+      contents += new Label("Seguir enlaces con la palabra")
+      contents += Swing.HStrut(5)
+      contents += followField
+    }
+    contents += Swing.VStrut(10)
+    contents += new BoxPanel(Orientation.Horizontal) {
       contents += new Label("Profundidad Máxima")
       contents += Swing.HStrut(5)
       contents += depthField
     }
     contents += Swing.VStrut(30)
     contents += Swing.HGlue
-    contents += Button("Crawl!") { crawler ! CrawlRequest(nameField.text, depthField.text.toInt) }
+    contents += Button("Crawl!") { crawler ! CrawlRequest(nameField.text, followField.text, depthField.text.toInt) }
     contents += Swing.VStrut(300)
     contents += new Label("Output")
     contents += Swing.VStrut(3)

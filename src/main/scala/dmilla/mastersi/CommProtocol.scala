@@ -7,6 +7,6 @@ import sun.awt.X11.Depth
   */
 object CommProtocol {
 
-  case class CrawlRequest(url: String, depth: Int)
+  case class CrawlRequest(url: String, follow_if: String, depth: Int)
 
 }
