@@ -88,6 +88,9 @@ class UI extends MainFrame {
   def addOutput(out: String): Unit = {
     outputField.append(out + "\n")
   }
+  def addSummary(out: String): Unit = {
+    summaryField.append(out + "\n")
+  }
 
 }
 
