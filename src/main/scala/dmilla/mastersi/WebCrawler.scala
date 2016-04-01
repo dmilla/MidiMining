@@ -57,9 +57,9 @@ class WebCrawler extends Actor {
       val newLinks = followLinks(linksWithReferer, linkRegex)
       notify("level " + currentDepth + " crawling finished, found " + newLinks.size + " new links!")
       notifysummary("level " + currentDepth + " ***** crawling finished! *****")
-      notifysummary("   found links___: " + newLinks.size + " new links!")
+      notifysummary("   found links_____: " + newLinks.size + " new links!")
       notifysummary("   midis download: " + midisFoundLevel )
-      notifysummary("   errors found__: " + errorsFoundLevel )
+      notifysummary("   errors found___: " + errorsFoundLevel )
       linksWithReferer = newLinks
       currentDepth += 1
     }
