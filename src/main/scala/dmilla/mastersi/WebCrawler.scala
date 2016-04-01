@@ -39,8 +39,10 @@ class WebCrawler extends Actor {
     val linkRegex = ("""http://[A-Za-z0-9-_:%&?/.=+]*""" + followIf + """[A-Za-z0-9-_:%&?/.=+]*""").r
     val (contentType, contentDisposition, inputStream) = getHttp(url, "")
     val links = getLinks(Source.fromInputStream(inputStream).getLines.mkString, linkRegex)
+    //links.foreach(notify(_))
     var linksWithReferer = links.map((url, _)).toArray.par
     notify("Found " + links.size + " links in starting page")
+    crawledUrls += url
     while (currentDepth < maxDepth) {
       val newLinks = followLinks(linksWithReferer, linkRegex)
       currentDepth += 1
@@ -51,22 +53,22 @@ class WebCrawler extends Actor {
 
   def followLinks(links: ParArray[(String, String)], linkRegex: Regex) = {
     val new_links = ArrayBuffer.empty[(String, String)]
-    //links.par.foreach( (linkWithReferer: (String, String)) =>
     for ( (referer, url) <- links ) {
-      if (!crawledUrls.contains(url) && !url.endsWith(".mid")) {
+      if (!crawledUrls.contains(url)) {
         try {
+          //if (url.endsWith(".mid")) notify("crawling url: " + url)
           val (contentType, contentDisposition, inputStream) = getHttp(url, referer)
           if (contentType contains "text/html") {
             val page_links = getLinks(Source.fromInputStream(inputStream).getLines.mkString, linkRegex)
             for (new_link <- page_links) {
               if (!crawledUrls.contains(new_link)) new_links.append((url, new_link))
             }
-          } else if (contentType == "audio/mid") {
+          } else if (contentType contains "audio/mid") {
             var fileName = "midi_" + midisFound
             if (contentDisposition != null && contentDisposition.indexOf("=") != -1) {
               fileName = contentDisposition.split("=")(1) replaceAll("\"", "")
             } else {
-              fileName = url
+              fileName = url replaceAll("http://", "") replaceAll("/", "-")
             }
             val nameWithPath = downloadsPath + "/" + fileName
             writeToFile(inputStreamToByteStream(inputStream), new java.io.File(nameWithPath))
@@ -76,14 +78,13 @@ class WebCrawler extends Actor {
             notify("Other ContentType found: " + contentType)
           }
         } catch {
-          case e: FileNotFoundException => notify("FileNotFoundException trying to access " + url)
+          //case e: FileNotFoundException => notify("FileNotFoundException trying to access " + url)
           case e: MalformedURLException => notify("MalformedURLException trying to access " + url)
-          case e: Exception => throw e
-          //case e: Exception => notify("exception caught while following link " + url + " with referer " + referer + " - Exception: " + e);
+          //case e: Exception => throw e
+          case e: Exception => notify("exception caught while following link " + url + " with referer " + referer + " - Exception: " + e);
         }
       }
     }
-    //)
     new_links.toArray.par
   }
 
