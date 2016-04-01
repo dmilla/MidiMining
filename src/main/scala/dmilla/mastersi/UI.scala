@@ -12,7 +12,7 @@ import akka.actor.Props
 
 class UI extends MainFrame {
   title = "MIDI Web Mining - Diego Milla - Minería Web - Master SSII - USAL"
-  preferredSize = new Dimension(900, 600)
+  preferredSize = new Dimension(1012, 880)
   val actorSystem = ActorSystem("MidiMiningSystem")
   val crawler = actorSystem.actorOf(Props[WebCrawler])
   val nameSize = new Dimension(300, 30)
@@ -21,6 +21,7 @@ class UI extends MainFrame {
   val followField = new TextField { text = "midi"}
   val depthField = new TextField { text = "2"}
   val outputField = new TextArea { rows = 26; lineWrap = true; wordWrap = true; editable = false }
+  val summaryField = new TextArea { rows = 26; lineWrap = true; wordWrap = true; editable = false }
   val dirChooser = new FileChooser
   //TODO remove midi test from dirField
   val dirField = new TextField( System.getProperty("user.home") + "/Midi/test" )
@@ -32,27 +33,33 @@ class UI extends MainFrame {
   dirField.peer.setMaximumSize(nameSize)
   dirField.editable = false
   outputField.editable = false
+  summaryField.editable = false
   contents = new BoxPanel(Orientation.Vertical) {
     contents += new BoxPanel(Orientation.Horizontal) {
-      contents += new Label("Web Objetivo")
+      contents += new Label("Web Objetivo___________________")
       contents += Swing.HStrut(5)
       contents += nameField
     }
-    contents += Swing.VStrut(10)
+    contents += Swing.VStrut(3)
+    contents += new Label("Seleccione una web de la lista o escriba una url válida")
+    contents += Swing.VStrut(15)
     contents += new BoxPanel(Orientation.Horizontal) {
       contents += new Label("Seguir enlaces con la palabra")
       contents += Swing.HStrut(5)
       contents += followField
     }
-    contents += Swing.VStrut(10)
+    contents += Swing.VStrut(3)
+    contents += new Label("La url o el nombre del fichero deberán llevar esta palabra para considerarse válidas, por ejemplo: pop, rock, midi, ect.")
+    contents += Swing.VStrut(15)
     contents += new BoxPanel(Orientation.Horizontal) {
-      contents += new Label("Profundidad Máxima")
+      contents += new Label("Profundidad Máxima___________")
       contents += Swing.HStrut(5)
       contents += depthField
     }
-    contents += Swing.VStrut(10)
+    contents += new Label("El número de niveles desde url padres a url hijos que se quieren analizar")
+    contents += Swing.VStrut(20)
     contents += new BoxPanel(Orientation.Horizontal) {
-      contents += Button("Directorio de salida") {
+      contents += Button("Directorio de salida______") {
         val res = dirChooser.showOpenDialog(this)
         if (res == FileChooser.Result.Approve) {
           dirField.text = dirChooser.selectedFile.getPath
@@ -61,13 +68,18 @@ class UI extends MainFrame {
       contents += Swing.HStrut(5)
       contents += dirField
     }
+    contents += new Label("Directorio de destino en que se descargarán los ficheros midi encontrados")
     contents += Swing.VStrut(30)
     contents += Swing.HGlue
     contents += Button("Crawl & download midis!") { crawler ! CrawlRequest(nameField.text, followField.text, depthField.text.toInt, dirField.text) }
-    contents += Swing.VStrut(60)
+    contents += Swing.VStrut(30)
     contents += new Label("Output")
     contents += Swing.VStrut(3)
     contents += new ScrollPane(outputField)
+    contents += Swing.HStrut(10)
+    contents += new Label("Summary")
+    contents += Swing.VStrut(3)
+    contents += new ScrollPane(summaryField)
     for (e <- contents)
       e.xLayoutAlignment = 0.0
     border = Swing.EmptyBorder(10, 10, 10, 10)
