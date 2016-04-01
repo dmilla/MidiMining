@@ -111,6 +111,10 @@ class WebCrawler extends Actor {
     })
     val contentType =  connection.getHeaderField("Content-Type")
     val contentDisposition =  connection.getHeaderField("Content-Disposition")
+    /*
+    Hay que verificar cuando el servidor devuelve un error response code 403, u otro cualquiera
+    En este caso no se puede continuar.
+     */
     val inputStream = connection.getInputStream
     crawledUrls += url
     (contentType, contentDisposition, inputStream)
