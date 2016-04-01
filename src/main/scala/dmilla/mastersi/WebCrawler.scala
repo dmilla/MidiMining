@@ -4,19 +4,20 @@ package dmilla.mastersi
   * Created by diego on 30/03/16.
   */
 
+import java.io._
+
 import akka.actor.Actor
 
 import io.{BufferedSource, Source}
-import java.net.URL
+import java.net.{MalformedURLException, URL}
 
 import dmilla.mastersi.CommProtocol.CrawlRequest
 
 import scala.util.matching.Regex
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.parallel.mutable.ParArray
 
-//TODO protect errors with try/catch
-//TODO new actor each request?
 class WebCrawler extends Actor {
 
   var requestProperties = HashMap(
@@ -24,38 +25,66 @@ class WebCrawler extends Actor {
     "Referer" -> ""
   )
   var crawledUrls = ArrayBuffer.empty[String]
+  var currentDepth = 0
+  var midisFound = 0
+  var downloadsPath = System.getProperty("user.home")
 
 
-  def crawlUrl(url: String, follow_if: String, max_depth: Int) = {
+  def crawlUrl(url: String, followIf: String, maxDepth: Int, downloadsDirectory: String) = {
     notify("Let's crawl " + url + " and find some Midi files!")
-    val linkRegex = ("""http://[A-Za-z0-9-_:%&?/.=]*""" + follow_if + """[A-Za-z0-9-_:%&?/.=]*""").r
-    val (content_type, input_stream) = getHttp(url, "")
-    val links = getLinks(Source.fromInputStream(input_stream).getLines.mkString, linkRegex)
-    var links_with_referer = links.map((url, _)).toArray
-    var current_depth = 1
+    currentDepth = 0
+    crawledUrls = ArrayBuffer.empty[String]
+    midisFound = 0
+    if (!downloadsDirectory.isEmpty) downloadsPath = downloadsDirectory
+    val linkRegex = ("""http://[A-Za-z0-9-_:%&?/.=+]*""" + followIf + """[A-Za-z0-9-_:%&?/.=+]*""").r
+    val (contentType, contentDisposition, inputStream) = getHttp(url, "")
+    val links = getLinks(Source.fromInputStream(inputStream).getLines.mkString, linkRegex)
+    var linksWithReferer = links.map((url, _)).toArray.par
     notify("Found " + links.size + " links in starting page")
-    while (current_depth < max_depth) {
-      val new_links = followLinks(links_with_referer, linkRegex)
-      notify("level " + current_depth + " crawling finished, found " + new_links.size + " new links!")
-      current_depth += 1
-      links_with_referer = new_links
+    while (currentDepth < maxDepth) {
+      val newLinks = followLinks(linksWithReferer, linkRegex)
+      currentDepth += 1
+      notify("level " + currentDepth + " crawling finished, found " + newLinks.size + " new links!")
+      linksWithReferer = newLinks
     }
   }
 
-  def followLinks(links: Array[(String, String)], linkRegex: Regex) = {
+  def followLinks(links: ParArray[(String, String)], linkRegex: Regex) = {
     val new_links = ArrayBuffer.empty[(String, String)]
-    links.par.foreach( (link_with_referer: (String, String)) =>
-      if (!crawledUrls.contains(link_with_referer._2) && !link_with_referer._2.endsWith(".mid")) {
-        val (content_type, input_stream) = getHttp(link_with_referer._2, link_with_referer._1)
-        if (content_type == "text/html") {
-          val page_links = getLinks(Source.fromInputStream(input_stream).getLines.mkString, linkRegex)
-          for (new_link <- page_links) {
-            if (!crawledUrls.contains(new_link)) {new_links.append((link_with_referer._2, new_link))}
+    //links.par.foreach( (linkWithReferer: (String, String)) =>
+    for ( (referer, url) <- links ) {
+      if (!crawledUrls.contains(url) && !url.endsWith(".mid")) {
+        try {
+          val (contentType, contentDisposition, inputStream) = getHttp(url, referer)
+          if (contentType contains "text/html") {
+            val page_links = getLinks(Source.fromInputStream(inputStream).getLines.mkString, linkRegex)
+            for (new_link <- page_links) {
+              if (!crawledUrls.contains(new_link)) new_links.append((url, new_link))
+            }
+          } else if (contentType == "audio/mid") {
+            var fileName = "midi_" + midisFound
+            if (contentDisposition != null && contentDisposition.indexOf("=") != -1) {
+              fileName = contentDisposition.split("=")(1) replaceAll("\"", "")
+            } else {
+              fileName = url
+            }
+            val nameWithPath = downloadsPath + "/" + fileName
+            writeToFile(inputStreamToByteStream(inputStream), new java.io.File(nameWithPath))
+            midisFound += 1
+            notify("New MIDI saved: " + nameWithPath)
+          } else {
+            notify("Other ContentType found: " + contentType)
           }
+        } catch {
+          case e: FileNotFoundException => notify("FileNotFoundException trying to access " + url)
+          case e: MalformedURLException => notify("MalformedURLException trying to access " + url)
+          case e: Exception => throw e
+          //case e: Exception => notify("exception caught while following link " + url + " with referer " + referer + " - Exception: " + e);
         }
       }
-    )
-    new_links.toArray
+    }
+    //)
+    new_links.toArray.par
   }
 
   def getHttp(url: String, referer: String) = {
@@ -64,10 +93,11 @@ class WebCrawler extends Actor {
     requestProperties.foreach({
       case (name, value) => connection.setRequestProperty(name, value)
     })
-    val content_type =  connection.getHeaderField("Content-Type")
-    val input_stream = connection.getInputStream
+    val contentType =  connection.getHeaderField("Content-Type")
+    val contentDisposition =  connection.getHeaderField("Content-Disposition")
+    val inputStream = connection.getInputStream
     crawledUrls += url
-    (content_type, input_stream)
+    (contentType, contentDisposition, inputStream)
   }
 
   def getLinks(html: String, linkRegex: Regex): Set[String] =
@@ -78,14 +108,22 @@ class WebCrawler extends Actor {
     val r = f
     val end = System.nanoTime
     val time = (end - start)/(1e6*1000)
-    notify("Crawling finalizado, tiempo total: " + time +"s")
+    notify("Crawling finalizado, " + midisFound + " midis descargados! " + crawledUrls.size + " páginas recorridas en " + time +"s")
     r
+  }
+
+  def inputStreamToByteStream(is: InputStream): Stream[Byte] =
+    Iterator continually is.read takeWhile (-1 !=) map (_.toByte) toStream
+
+  def writeToFile(data : Stream[Byte], file : File) = {
+    val target = new BufferedOutputStream( new FileOutputStream(file) )
+    try data.foreach( target.write(_) ) finally target.close
   }
 
   def notify(msg: String) = MidiMiningGui.addOutput(msg)
 
   def receive = {
-    case  CrawlRequest(url, follow_if, depth) => time(crawlUrl(url, follow_if, depth))
+    case  CrawlRequest(url, followIf, depth, downloadsDirectory) => time(crawlUrl(url, followIf, depth, downloadsDirectory))
     case _      ⇒ notify("WebCrawler received unknown message")
   }
 
