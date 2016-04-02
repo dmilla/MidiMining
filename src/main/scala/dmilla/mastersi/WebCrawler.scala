@@ -8,10 +8,10 @@ import java.io._
 
 import akka.actor.Actor
 
-import io.{BufferedSource, Source}
+import io.Source
 import java.net.{MalformedURLException, URL}
 
-import dmilla.mastersi.CommProtocol.CrawlRequest
+import dmilla.mastersi.CommProtocol.{CrawlRequest, MelodyExtractionRequest}
 
 import scala.util.matching.Regex
 import scala.collection.mutable.HashMap
@@ -71,7 +71,9 @@ class WebCrawler extends Actor {
               fileName = url replaceAll("http://", "") replaceAll("/", "-")
             }
             val nameWithPath = downloadsPath + "/" + fileName
-            writeToFile(inputStreamToByteStream(inputStream), new java.io.File(nameWithPath))
+            val midiFile = new File(nameWithPath)
+            writeToFile(inputStreamToByteStream(inputStream), midiFile)
+            MidiMiningGui.extractor ! MelodyExtractionRequest(midiFile)
             midisFound += 1
             notify("New MIDI saved: " + nameWithPath)
           } else {
@@ -80,8 +82,8 @@ class WebCrawler extends Actor {
         } catch {
           //case e: FileNotFoundException => notify("FileNotFoundException trying to access " + url)
           case e: MalformedURLException => notify("MalformedURLException trying to access " + url)
-          //case e: Exception => throw e
-          case e: Exception => notify("exception caught while following link " + url + " with referer " + referer + " - Exception: " + e);
+          case e: Exception => throw e
+          //case e: Exception => notify("exception caught while following link " + url + " with referer " + referer + " - Exception: " + e);
         }
       }
     }

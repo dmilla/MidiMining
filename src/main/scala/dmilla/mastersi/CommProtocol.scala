@@ -1,5 +1,7 @@
 package dmilla.mastersi
 
+import java.io.File
+
 import sun.awt.X11.Depth
 
 /**
@@ -8,6 +10,6 @@ import sun.awt.X11.Depth
 object CommProtocol {
 
   case class CrawlRequest(url: String, followIf: String, depth: Int, downloadsDirectory: String)
-  case class ExtractionRequest(midi: String)
+  case class MelodyExtractionRequest(midiFile: File)
 
 }

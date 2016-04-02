@@ -15,6 +15,7 @@ class UI extends MainFrame {
   preferredSize = new Dimension(900, 600)
   val actorSystem = ActorSystem("MidiMiningSystem")
   val crawler = actorSystem.actorOf(Props[WebCrawler])
+  val extractor = actorSystem.actorOf(Props[MelodyExtractor])
   val nameSize = new Dimension(300, 30)
   val depthSize = new Dimension(60, 30)
   val nameField = new TextField { text = "http://www.download-midi.com/"}
