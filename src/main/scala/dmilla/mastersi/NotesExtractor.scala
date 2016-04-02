@@ -4,7 +4,7 @@ import java.io._
 import javax.sound.midi.{MidiSystem, Sequence, ShortMessage}
 
 import akka.actor.Actor
-import dmilla.mastersi.CommProtocol.MelodyExtractionRequest
+import dmilla.mastersi.CommProtocol.NotesExtractionRequest
 
 import scala.collection.mutable._
 
@@ -88,7 +88,7 @@ class NotesExtractor extends Actor {
   def notify(msg: String) = MidiMiningGui.addOutput(msg)
 
   def receive = {
-    case MelodyExtractionRequest(midiFile) => extract(midiFile)
+    case NotesExtractionRequest(midiFile) => extract(midiFile)
     case _ ⇒ notify("MelodyExtractor received unknown message")
   }
 

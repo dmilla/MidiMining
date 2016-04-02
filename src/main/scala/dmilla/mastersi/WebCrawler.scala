@@ -11,7 +11,7 @@ import akka.actor.Actor
 import io.Source
 import java.net.{MalformedURLException, URL}
 
-import dmilla.mastersi.CommProtocol.{CrawlRequest, MelodyExtractionRequest}
+import dmilla.mastersi.CommProtocol.{CrawlRequest, NotesExtractionRequest}
 
 import scala.util.matching.Regex
 import scala.collection.mutable.HashMap
@@ -73,7 +73,7 @@ class WebCrawler extends Actor {
             val nameWithPath = downloadsPath + "/" + fileName
             val midiFile = new File(nameWithPath)
             writeToFile(inputStreamToByteStream(inputStream), midiFile)
-            MidiMiningGui.notesExtractor ! MelodyExtractionRequest(midiFile)
+            MidiMiningGui.notesExtractor ! NotesExtractionRequest(midiFile)
             midisFound += 1
             notify("New MIDI saved: " + nameWithPath)
           } else {

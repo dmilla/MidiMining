@@ -8,7 +8,7 @@ import java.io.File
 object CommProtocol {
 
   case class CrawlRequest(url: String, followIf: String, depth: Int, downloadsDirectory: String)
-  case class MelodyExtractionRequest(midiFile: File)
+  case class NotesExtractionRequest(midiFile: File)
   case class FeaturesExtractionRequest(path: String)
 
 }
