@@ -3,7 +3,7 @@ package dmilla.mastersi
 /**
   * Created by diego on 25/03/16.
   */
-import dmilla.mastersi.CommProtocol.CrawlRequest
+import dmilla.mastersi.CommProtocol.{CrawlRequest, FeaturesExtractionRequest}
 
 import scala.swing._
 import akka.actor.ActorSystem
@@ -15,7 +15,8 @@ class UI extends MainFrame {
   preferredSize = new Dimension(900, 600)
   val actorSystem = ActorSystem("MidiMiningSystem")
   val crawler = actorSystem.actorOf(Props[WebCrawler])
-  val extractor = actorSystem.actorOf(Props[MelodyExtractor])
+  val notesExtractor = actorSystem.actorOf(Props[NotesExtractor])
+  val featuresExtractor = actorSystem.actorOf(Props[FeaturesExtractor])
   val nameSize = new Dimension(300, 30)
   val depthSize = new Dimension(60, 30)
   val nameField = new TextField { text = "http://www.download-midi.com/"}
@@ -62,9 +63,12 @@ class UI extends MainFrame {
       contents += Swing.HStrut(5)
       contents += dirField
     }
-    contents += Swing.VStrut(30)
+    contents += Swing.VStrut(20)
     contents += Swing.HGlue
     contents += Button("Crawl & download midis!") { crawler ! CrawlRequest(nameField.text, followField.text, depthField.text.toInt, dirField.text) }
+    contents += Swing.VStrut(20)
+    contents += Swing.HGlue
+    //contents += Button("Extract features") { featuresExtractor ! FeaturesExtractionRequest(dirField.text) }
     contents += Swing.VStrut(60)
     contents += new Label("Output")
     contents += Swing.VStrut(3)

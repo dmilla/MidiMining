@@ -73,7 +73,7 @@ class WebCrawler extends Actor {
             val nameWithPath = downloadsPath + "/" + fileName
             val midiFile = new File(nameWithPath)
             writeToFile(inputStreamToByteStream(inputStream), midiFile)
-            MidiMiningGui.extractor ! MelodyExtractionRequest(midiFile)
+            MidiMiningGui.notesExtractor ! MelodyExtractionRequest(midiFile)
             midisFound += 1
             notify("New MIDI saved: " + nameWithPath)
           } else {

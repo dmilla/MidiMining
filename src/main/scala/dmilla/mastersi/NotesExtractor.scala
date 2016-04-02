@@ -11,7 +11,7 @@ import scala.collection.mutable._
 /**
   * Created by diego on 1/04/16.
   */
-class MelodyExtractor extends Actor {
+class NotesExtractor extends Actor {
 
   val MIDI_PROGRAM_CHANGE = 0xC0
   val MIDI_NOTE_ON = 0x90
@@ -20,7 +20,7 @@ class MelodyExtractor extends Actor {
     try {
       extractNotesFromMidi(midiFile)
     } catch {
-      case e: Exception => notify("exception while trying to extract " + midiFile.getName + " - Exception: " + e);
+      case e: Exception => notify("exception while trying to extract notes from " + midiFile.getName + " - Exception: " + e)
     }
   }
 
