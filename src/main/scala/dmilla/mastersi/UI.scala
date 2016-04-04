@@ -47,7 +47,7 @@ class UI extends MainFrame {
   midiExtractorDirField.editable = false
   val featuresExtractorDirField = new TextField( defaultPathFile.getAbsolutePath + "/notes/Piano" )
   featuresExtractDirChooser.fileSelectionMode = FileChooser.SelectionMode.DirectoriesOnly
-  featuresExtractDirChooser.title = "Selecciona el directorio en el que se encuentran los archivos txt con las notas para la extraccion"
+  featuresExtractDirChooser.title = "Selecciona el directorio de los archivos txt con las notas para la extraccion"
   featuresExtractorDirField.peer.setMaximumSize(textFieldSize)
   featuresExtractorDirField.editable = false
   contents = new BoxPanel(Orientation.Vertical) {

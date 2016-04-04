@@ -31,7 +31,7 @@ class WebCrawler extends Actor {
 
 
   def crawlUrl(url: String, followIf: String, maxDepth: Int, downloadsDirectory: String) = {
-    notify("Crawling " + url + "!")
+    notify("¡Crawling " + url + "!")
     currentDepth = 0
     crawledUrls = ArrayBuffer.empty[String]
     midisFound = 0
@@ -41,12 +41,12 @@ class WebCrawler extends Actor {
     val links = getLinks(Source.fromInputStream(inputStream).getLines.mkString, linkRegex)
     //links.foreach(notify(_))
     var linksWithReferer = links.map((url, _)).toArray.par
-    notify("Encotrados " + links.size + " links en la web objetivo")
+    notify("Se han encontrado " + links.size + " links en la web objetivo")
     crawledUrls += url
     while (currentDepth < maxDepth) {
       val newLinks = followLinks(linksWithReferer, linkRegex)
       currentDepth += 1
-      notify("Profundidad " + currentDepth + " alcanzada, se encontraron " + newLinks.size + " nuevos links!")
+      notify("Profundidad " + currentDepth + " alcanzada, ¡se encontraron " + newLinks.size + " nuevos links!")
       linksWithReferer = newLinks
     }
   }

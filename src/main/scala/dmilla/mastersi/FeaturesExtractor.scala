@@ -16,7 +16,7 @@ import scala.collection.mutable.ArrayBuffer
 class FeaturesExtractor extends  Actor {
 
   def extractFeatures(path: String) = {
-    notify("Extracting features of note txt files in folder: " + path)
+    notify("Extrayendo características de las notas de los archivos txt en la carpeta: " + path)
     val pathFile = new File(path)
     val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     val now = Calendar.getInstance.getTime
@@ -27,11 +27,11 @@ class FeaturesExtractor extends  Actor {
       try {
         extractFeaturesFromNotesTxt(file, writer)
       } catch {
-        case e: Exception => notify("exception while trying to extract features from " + path + " - Exception: " + e);
+        case e: Exception => notify("Excepción extrayendo características en " + path + " : " + e);
       }
     }
     writer.close
-    notify("Features have been succesfully extracted! CSV has been generated in target folder")
+    notify("¡Características extraídas exitosamente! Se ha generado un fichero csv con los datos en: " + path)
   }
 
   def extractFeaturesFromNotesTxt(file: File, writer: CSVWriter) = {
