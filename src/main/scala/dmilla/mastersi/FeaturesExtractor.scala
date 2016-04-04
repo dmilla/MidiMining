@@ -78,7 +78,7 @@ class FeaturesExtractor extends  Actor {
     writer.writeRow( List(file.getName, meanVar.toString, (octaveMinus2/totalNotes).toString, (octaveMinus1/totalNotes).toString, (octave0/totalNotes).toString, (octave1/totalNotes).toString, (octave2/totalNotes).toString, (octave3/totalNotes).toString, (octave4/totalNotes).toString, (octave5/totalNotes).toString, (octave6/totalNotes).toString, (octave7/totalNotes).toString, (octave8/totalNotes).toString) )
   }
 
-  def notify(msg: String) = MidiMiningGui.addOutput(msg)
+  def notify(msg: String) = MidiMiningGui.addExtractorOutput(msg)
 
   def receive = {
     case FeaturesExtractionRequest(path) => extractFeatures(path)

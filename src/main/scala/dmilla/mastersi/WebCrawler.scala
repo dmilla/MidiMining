@@ -123,7 +123,7 @@ class WebCrawler extends Actor {
     try data.foreach( target.write(_) ) finally target.close
   }
 
-  def notify(msg: String) = MidiMiningGui.addOutput(msg)
+  def notify(msg: String) = MidiMiningGui.addCrawlerOutput(msg)
 
   def receive = {
     case  CrawlRequest(url, followIf, depth, downloadsDirectory) => time(crawlUrl(url, followIf, depth, downloadsDirectory))

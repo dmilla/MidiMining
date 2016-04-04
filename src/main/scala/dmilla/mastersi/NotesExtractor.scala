@@ -4,7 +4,7 @@ import java.io._
 import javax.sound.midi.{MidiSystem, Sequence, ShortMessage}
 
 import akka.actor.Actor
-import dmilla.mastersi.CommProtocol.NotesExtractionRequest
+import dmilla.mastersi.CommProtocol.{FolderNotesExtractionRequest, NotesExtractionRequest}
 
 import scala.collection.mutable._
 
@@ -21,6 +21,13 @@ class NotesExtractor extends Actor {
       extractNotesFromMidi(midiFile)
     } catch {
       case e: Exception => notify("exception while trying to extract notes from " + midiFile.getName + " - Exception: " + e)
+    }
+  }
+
+  def extractFolder(path: String) = {
+    val pathFile = new File(path)
+    for(file <- pathFile.listFiles if file.getName endsWith ".mid"){
+        extract(file)
     }
   }
 
@@ -71,7 +78,7 @@ class NotesExtractor extends Actor {
       }
       for ((instrument, notes) <- notes) {
         if (notes.size > 8) {
-          val outFile = new File(midiFile.getAbsoluteFile.getParentFile.getAbsolutePath + "/melodies/" + instrument + "/" + midiFile.getName + ".txt")
+          val outFile = new File(midiFile.getAbsoluteFile.getParentFile.getAbsolutePath + "/notes/" + instrument + "/" + midiFile.getName + ".txt")
           textToFile(notes.mkString(", "), outFile)
         }
       }
@@ -85,10 +92,11 @@ class NotesExtractor extends Actor {
     pw.close
   }
 
-  def notify(msg: String) = MidiMiningGui.addOutput(msg)
+  def notify(msg: String) = MidiMiningGui.addExtractorOutput(msg)
 
   def receive = {
     case NotesExtractionRequest(midiFile) => extract(midiFile)
+    case FolderNotesExtractionRequest(path) => extractFolder(path)
     case _ ⇒ notify("MelodyExtractor received unknown message")
   }
 
