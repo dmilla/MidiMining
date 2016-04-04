@@ -4,6 +4,8 @@ package dmilla.mastersi
   * Created by diego on 25/03/16.
   */
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Calendar
 
 import dmilla.mastersi.CommProtocol.{CrawlRequest, FeaturesExtractionRequest, FolderNotesExtractionRequest}
 
@@ -50,6 +52,7 @@ class UI extends MainFrame {
   featuresExtractDirChooser.title = "Selecciona el directorio de los archivos txt con las notas para la extraccion"
   featuresExtractorDirField.peer.setMaximumSize(textFieldSize)
   featuresExtractorDirField.editable = false
+  val dateformat = new SimpleDateFormat("d-M-y HH:mm:ss")
   contents = new BoxPanel(Orientation.Vertical) {
     contents += new BoxPanel(Orientation.Horizontal) {
       val label = new Label("Web Objetivo")
@@ -93,7 +96,11 @@ class UI extends MainFrame {
       }
     }
     contents += Swing.VStrut(10)
-    contents += Button("Empezar el proceso de Minería Web") { crawler ! CrawlRequest(nameField.text, followField.text, depthField.text.toInt, crawlerDirField.text) }
+    contents += Button("Empezar el proceso de Minería Web") {
+      crawlerOutputField.peer.setText(dateformat.format(Calendar.getInstance().getTime())+"\n")
+      extractorOutputField.peer.setText(dateformat.format(Calendar.getInstance().getTime())+"\n")
+      crawler ! CrawlRequest(nameField.text, followField.text, depthField.text.toInt, crawlerDirField.text)
+    }
     contents += Swing.VStrut(10)
     contents += new Label("Información del crawler")
     contents += Swing.VStrut(3)
