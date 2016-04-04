@@ -109,7 +109,7 @@ class WebCrawler extends Actor {
     val r = f
     val end = System.nanoTime
     val time = (end - start)/(1e6*1000)
-    notify("Crawling finalizado, " + midisFound + " midis descargados! " + crawledUrls.size + " páginas recorridas en " + time +"s")
+    notify("Crawling finalizado, ¡" + midisFound + " midis descargados! " + crawledUrls.size + " páginas recorridas en " + time +"s")
     MidiMiningGui.notesExtractor ! "report"
     r
   }

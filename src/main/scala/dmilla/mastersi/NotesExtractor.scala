@@ -108,7 +108,7 @@ class NotesExtractor extends Actor {
     case NotesExtractionRequest(midiFile) => extract(midiFile)
     case FolderNotesExtractionRequest(path) => extractFolder(path)
     case "report" => reportSummary
-    case _ ⇒ notify("MelodyExtractor received unknown message")
+    case _ ⇒ notify("NotesExtractor received unknown message")
   }
 
 }

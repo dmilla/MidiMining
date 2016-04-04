@@ -13,7 +13,7 @@ import akka.actor.Props
 
 
 class UI extends MainFrame {
-  title = "MIDI Web Miner - Diego Milla - Minería Web - Master SSII - USAL"
+  title = "MIDIWebMiner - Diego Milla - Minería Web - Master SSII - USAL"
   preferredSize = new Dimension(1250, 750)
   val actorSystem = ActorSystem("MidiMiningSystem")
   val crawler = actorSystem.actorOf(Props[WebCrawler])

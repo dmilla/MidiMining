@@ -22,19 +22,21 @@ class FeaturesExtractor extends  Actor {
     val now = Calendar.getInstance.getTime
     val csv = new File(path + "/" + dateFormat.format(now) + " - featuresExtraction.csv")
     val writer = CSVWriter.open(csv)
-    writer.writeRow(List("Archivo", "Variación Media", "Octava -2", "Octava -1", "Octava 0", "Octava 1", "Octava 2", "Octava 3", "Octava 4", "Octava 5", "Octava 6", "Octava 7", "Octava 8"))
+    writer.writeRow(List("Archivo", "ID", "Variación Media", "Octava -2", "Octava -1", "Octava 0", "Octava 1", "Octava 2", "Octava 3", "Octava 4", "Octava 5", "Octava 6", "Octava 7", "Octava 8"))
+    var id = 1
     for(file <- pathFile.listFiles if file.getName endsWith ".txt"){
       try {
-        extractFeaturesFromNotesTxt(file, writer)
+        extractFeaturesFromNotesTxt(file, writer, id)
+        id += 1
       } catch {
         case e: Exception => notify("Excepción extrayendo características en " + path + " : " + e);
       }
     }
     writer.close
-    notify("¡Características extraídas exitosamente! Se ha generado un fichero csv con los datos en: " + path)
+    notify("¡Características extraídas exitosamente de " + id + " secuencias de notas! Se ha generado un fichero csv con los datos en: " + path)
   }
 
-  def extractFeaturesFromNotesTxt(file: File, writer: CSVWriter) = {
+  def extractFeaturesFromNotesTxt(file: File, writer: CSVWriter, id: Int) = {
     val source = scala.io.Source.fromFile(file)
     val notes = try source.mkString.split(", ") finally source.close()
     var octaveMinus2 = 0
@@ -50,7 +52,7 @@ class FeaturesExtractor extends  Actor {
     var octave8 = 0
     var lastNote = 0
     val variation = ArrayBuffer.empty[Int]
-    var firtsNote = true
+    var firstNote = true
     for (noteString <- notes) {
       val note = noteString.toInt
       note match {
@@ -66,8 +68,8 @@ class FeaturesExtractor extends  Actor {
         case x if x < 120 => octave7 += 1
         case x if x < 128 => octave8 += 1
       }
-      if (firtsNote) {
-        firtsNote = false
+      if (firstNote) {
+        firstNote = false
       } else {
         variation += Math.abs(note - lastNote)
       }
@@ -75,14 +77,14 @@ class FeaturesExtractor extends  Actor {
     }
     val meanVar = variation.sum/variation.size
     val totalNotes: Double = notes.size
-    writer.writeRow( List(file.getName, meanVar.toString, (octaveMinus2/totalNotes).toString, (octaveMinus1/totalNotes).toString, (octave0/totalNotes).toString, (octave1/totalNotes).toString, (octave2/totalNotes).toString, (octave3/totalNotes).toString, (octave4/totalNotes).toString, (octave5/totalNotes).toString, (octave6/totalNotes).toString, (octave7/totalNotes).toString, (octave8/totalNotes).toString) )
+    writer.writeRow( List(file.getName, id.toString, meanVar.toString, (octaveMinus2/totalNotes).toString, (octaveMinus1/totalNotes).toString, (octave0/totalNotes).toString, (octave1/totalNotes).toString, (octave2/totalNotes).toString, (octave3/totalNotes).toString, (octave4/totalNotes).toString, (octave5/totalNotes).toString, (octave6/totalNotes).toString, (octave7/totalNotes).toString, (octave8/totalNotes).toString) )
   }
 
   def notify(msg: String) = MidiMiningGui.addExtractorOutput(msg)
 
   def receive = {
     case FeaturesExtractionRequest(path) => extractFeatures(path)
-    case _ ⇒ notify("MelodyExtractor received unknown message")
+    case _ ⇒ println("FeaturesExtractor received unknown message")
   }
 
 
