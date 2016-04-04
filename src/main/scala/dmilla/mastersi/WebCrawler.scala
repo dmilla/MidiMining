@@ -31,7 +31,7 @@ class WebCrawler extends Actor {
 
 
   def crawlUrl(url: String, followIf: String, maxDepth: Int, downloadsDirectory: String) = {
-    notify("Let's crawl " + url + " and find some Midi files!")
+    notify("Crawling " + url + "!")
     currentDepth = 0
     crawledUrls = ArrayBuffer.empty[String]
     midisFound = 0
@@ -41,12 +41,12 @@ class WebCrawler extends Actor {
     val links = getLinks(Source.fromInputStream(inputStream).getLines.mkString, linkRegex)
     //links.foreach(notify(_))
     var linksWithReferer = links.map((url, _)).toArray.par
-    notify("Found " + links.size + " links in starting page")
+    notify("Encotrados " + links.size + " links en la web objetivo")
     crawledUrls += url
     while (currentDepth < maxDepth) {
       val newLinks = followLinks(linksWithReferer, linkRegex)
       currentDepth += 1
-      notify("level " + currentDepth + " crawling finished, found " + newLinks.size + " new links!")
+      notify("Profundidad " + currentDepth + " alcanzada, se encontraron " + newLinks.size + " nuevos links!")
       linksWithReferer = newLinks
     }
   }
@@ -56,7 +56,6 @@ class WebCrawler extends Actor {
     for ( (referer, url) <- links ) {
       if (!crawledUrls.contains(url)) {
         try {
-          //if (url.endsWith(".mid")) notify("crawling url: " + url)
           val (contentType, contentDisposition, inputStream) = getHttp(url, referer)
           if (contentType contains "text/html") {
             val page_links = getLinks(Source.fromInputStream(inputStream).getLines.mkString, linkRegex)
@@ -75,15 +74,14 @@ class WebCrawler extends Actor {
             writeToFile(inputStreamToByteStream(inputStream), midiFile)
             MidiMiningGui.notesExtractor ! NotesExtractionRequest(midiFile)
             midisFound += 1
-            notify("New MIDI saved: " + nameWithPath)
+            notify("Nuevo MIDI descargado: " + nameWithPath)
           } else {
-            notify("Other ContentType found: " + contentType)
+            println("Other ContentType found: " + contentType)
           }
         } catch {
-          //case e: FileNotFoundException => notify("FileNotFoundException trying to access " + url)
-          case e: MalformedURLException => notify("MalformedURLException trying to access " + url)
-          case e: Exception => throw e
-          //case e: Exception => notify("exception caught while following link " + url + " with referer " + referer + " - Exception: " + e);
+          case e: FileNotFoundException => notify("FileNotFoundException intentando acceder a " + url)
+          case e: MalformedURLException => notify("MalformedURLException intentando acceder a " + url)
+          case e: Exception => notify("Excepción accediendo a " + url + " con referer " + referer + " : " + e)
         }
       }
     }
@@ -112,6 +110,7 @@ class WebCrawler extends Actor {
     val end = System.nanoTime
     val time = (end - start)/(1e6*1000)
     notify("Crawling finalizado, " + midisFound + " midis descargados! " + crawledUrls.size + " páginas recorridas en " + time +"s")
+    MidiMiningGui.notesExtractor ! "report"
     r
   }
 
@@ -127,7 +126,7 @@ class WebCrawler extends Actor {
 
   def receive = {
     case  CrawlRequest(url, followIf, depth, downloadsDirectory) => time(crawlUrl(url, followIf, depth, downloadsDirectory))
-    case _      ⇒ notify("WebCrawler received unknown message")
+    case _      ⇒ println("WebCrawler received unknown message")
   }
 
 }

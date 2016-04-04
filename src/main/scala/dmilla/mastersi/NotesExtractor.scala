@@ -15,27 +15,30 @@ class NotesExtractor extends Actor {
 
   val MIDI_PROGRAM_CHANGE = 0xC0
   val MIDI_NOTE_ON = 0x90
+  var extractedFiles = 0
 
   def extract(midiFile: File) = {
     try {
       extractNotesFromMidi(midiFile)
     } catch {
-      case e: Exception => notify("exception while trying to extract notes from " + midiFile.getName + " - Exception: " + e)
+      case e: Exception => notify("Excepción intentando extraer notas de " + midiFile.getName + ": " + e)
     }
   }
 
   def extractFolder(path: String) = {
+    extractedFiles = 0
     val pathFile = new File(path)
     for(file <- pathFile.listFiles if file.getName endsWith ".mid"){
         extract(file)
     }
+    reportSummary
   }
 
   def extractNotesFromMidi(midiFile: File) = {
     val sequence: Sequence = MidiSystem.getSequence(midiFile)
     val tracks = sequence.getTracks
     if (tracks.nonEmpty) {
-      notify("Extractor got midi with " + tracks.size + " tracks")
+      //notify("Extractor got midi with " + tracks.size + " tracks")
       val notes = HashMap(
         "Piano" -> ArrayBuffer.empty[Int],
         "Organ" -> ArrayBuffer.empty[Int],
@@ -80,9 +83,16 @@ class NotesExtractor extends Actor {
         if (notes.size > 8) {
           val outFile = new File(midiFile.getAbsoluteFile.getParentFile.getAbsolutePath + "/notes/" + instrument + "/" + midiFile.getName + ".txt")
           textToFile(notes.mkString(", "), outFile)
+          notify("Se han extraído exitosamente " + notes.size + " notas de " + instrument + " del fichero " + midiFile.getName)
+          extractedFiles += 1
         }
       }
-    } else notify("Extractor couldn't find any tracks for " + midiFile.getName)
+    } else notify("El extractor de notas no encontró ninguna pista MIDI en el archivo " + midiFile.getName)
+  }
+
+  def reportSummary = {
+    notify("Extracción de notas completada, se han generado " + extractedFiles + " archivos .txt")
+    extractedFiles = 0
   }
 
   def textToFile(text: String, file: File ): Unit = {
@@ -97,6 +107,7 @@ class NotesExtractor extends Actor {
   def receive = {
     case NotesExtractionRequest(midiFile) => extract(midiFile)
     case FolderNotesExtractionRequest(path) => extractFolder(path)
+    case "report" => reportSummary
     case _ ⇒ notify("MelodyExtractor received unknown message")
   }
 
