@@ -38,7 +38,7 @@ class WebCrawler extends Actor {
     if (!downloadsDirectory.isEmpty) downloadsPath = downloadsDirectory
     val linkRegex = ("""http://[A-Za-z0-9-_:%&?/.=+]*""" + followIf + """[A-Za-z0-9-_:%&?/.=+]*""").r
     val (contentType, contentDisposition, inputStream) = getHttp(url, "")
-    val links = getLinks(Source.fromInputStream(inputStream).getLines.mkString, linkRegex)
+    val links = getLinks(scala.io.Source.fromInputStream(inputStream, "UTF-8").getLines.mkString, linkRegex)
     //links.foreach(notify(_))
     var linksWithReferer = links.map((url, _)).toArray.par
     notify("Se han encontrado " + links.size + " links en la web objetivo")
@@ -58,7 +58,7 @@ class WebCrawler extends Actor {
         try {
           val (contentType, contentDisposition, inputStream) = getHttp(url, referer)
           if (contentType contains "text/html") {
-            val page_links = getLinks(Source.fromInputStream(inputStream).getLines.mkString, linkRegex)
+            val page_links = getLinks(scala.io.Source.fromInputStream(inputStream, "UTF-8").getLines.mkString, linkRegex)
             for (new_link <- page_links) {
               if (!crawledUrls.contains(new_link)) new_links.append((url, new_link))
             }

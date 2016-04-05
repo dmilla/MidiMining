@@ -18,7 +18,7 @@ class FeaturesExtractor extends  Actor {
   def extractFeatures(path: String) = {
     notify("Extrayendo características de las notas de los archivos txt en la carpeta: " + path)
     val pathFile = new File(path)
-    val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH;mm;ss")
     val now = Calendar.getInstance.getTime
     val csv = new File(path + "/" + dateFormat.format(now) + " - featuresExtraction.csv")
     val writer = CSVWriter.open(csv)
